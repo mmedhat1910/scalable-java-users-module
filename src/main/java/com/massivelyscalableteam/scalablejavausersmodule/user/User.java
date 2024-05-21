@@ -1,6 +1,15 @@
 package com.massivelyscalableteam.scalablejavausersmodule.user;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.UuidGenerator;
+
+@Entity
+@Table(name = "users")
 public class User {
+    @Id
+    @UuidGenerator(style = UuidGenerator.Style.RANDOM)
     String user_id;
     String username;
     String password;
