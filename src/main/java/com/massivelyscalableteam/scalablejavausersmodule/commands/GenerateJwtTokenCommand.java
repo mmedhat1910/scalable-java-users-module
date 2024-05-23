@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class GenerateJwtTokenCommand implements Command<String> {
+public class GenerateJwtTokenCommand {
 
 
 //    @Value("${jwt.secret}")
@@ -29,7 +29,6 @@ public class GenerateJwtTokenCommand implements Command<String> {
     }
 
 
-    @Override
     public String execute() {
         String secretKey = jwtConfig.getSecretKey();
         System.out.println(secretKey);
