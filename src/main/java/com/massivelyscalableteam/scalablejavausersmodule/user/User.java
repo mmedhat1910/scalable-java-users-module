@@ -16,10 +16,14 @@ public class User {
     String email;
     String full_name;
 
+
+
+    @UuidGenerator(style = UuidGenerator.Style.RANDOM)
+    String session;
+
     public User() {}
 
-    public User(String user_id, String username, String password, String email, String full_name) {
-        this.user_id = user_id;
+    public User(String username, String password, String email, String full_name) {
         this.username = username;
         this.password = password;
         this.email = email;
@@ -66,6 +70,13 @@ public class User {
         this.full_name = full_name;
     }
 
+    public String getSession() {
+        return session;
+    }
+
+    public void setSession(String session) {
+        this.session = session;
+    }
     @Override
     public String toString() {
         return "User{" +

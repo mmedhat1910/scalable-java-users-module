@@ -1,5 +1,7 @@
 package com.massivelyscalableteam.scalablejavausersmodule.commands;
 
+import org.springframework.http.ResponseEntity;
+
 public interface Command<T> {
-    T execute();
+    ResponseEntity<T> execute();
 }
