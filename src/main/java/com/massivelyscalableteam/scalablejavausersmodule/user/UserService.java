@@ -1,6 +1,7 @@
 package com.massivelyscalableteam.scalablejavausersmodule.user;
 import com.massivelyscalableteam.scalablejavausersmodule.commands.*;
 import com.massivelyscalableteam.scalablejavausersmodule.user.dto.LoginDto;
+import com.massivelyscalableteam.scalablejavausersmodule.user.dto.UpdateUserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -51,6 +52,12 @@ public class UserService {
     protected ResponseEntity<String> logout(String sessionId) {
         LogoutCommand logoutCommand = new LogoutCommand(sessionId, userRepository);
         UserCommandsInvoker<String> invoker = new UserCommandsInvoker<>(logoutCommand);
+        return invoker.invoke();
+    }
+
+    protected ResponseEntity<User> updateUser(String sessionId, String username, UpdateUserDto user) {
+        UpdateUserCommand updateUserCommand = new UpdateUserCommand(sessionId, username, user, userRepository);
+        UserCommandsInvoker<User> invoker = new UserCommandsInvoker<>(updateUserCommand);
         return invoker.invoke();
     }
 

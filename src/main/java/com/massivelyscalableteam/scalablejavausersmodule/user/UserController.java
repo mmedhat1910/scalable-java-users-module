@@ -1,6 +1,7 @@
 package com.massivelyscalableteam.scalablejavausersmodule.user;
 
 import com.massivelyscalableteam.scalablejavausersmodule.user.dto.LoginDto;
+import com.massivelyscalableteam.scalablejavausersmodule.user.dto.UpdateUserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -50,6 +51,14 @@ public class UserController {
     @PostMapping("/logout")
     ResponseEntity<String> logout(@RequestHeader String Authorization){
         return this.userService.logout(Authorization);
+    }
+
+    @PutMapping("/{username}")
+    ResponseEntity<User> updateUser(@RequestHeader String Authorization, @RequestBody UpdateUserDto user, @PathVariable String username){
+        System.out.println(Authorization);
+        System.out.println(user);
+        System.out.println(username);
+        return this.userService.updateUser(Authorization, username, user);
     }
 
 }
