@@ -1,8 +1,5 @@
 package com.massivelyscalableteam.scalablejavausersmodule.user;
-import com.massivelyscalableteam.scalablejavausersmodule.commands.GetUserCommand;
-import com.massivelyscalableteam.scalablejavausersmodule.commands.GetUsersCommand;
-import com.massivelyscalableteam.scalablejavausersmodule.commands.LoginCommand;
-import com.massivelyscalableteam.scalablejavausersmodule.commands.RegisterCommand;
+import com.massivelyscalableteam.scalablejavausersmodule.commands.*;
 import com.massivelyscalableteam.scalablejavausersmodule.user.dto.LoginDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -48,6 +45,12 @@ public class UserService {
     protected ResponseEntity<User> getUserByUsername(String username) {
         GetUserCommand getUserCommand = new GetUserCommand(userRepository, null, username);
         UserCommandsInvoker<User> invoker = new UserCommandsInvoker<>(getUserCommand);
+        return invoker.invoke();
+    }
+
+    protected ResponseEntity<String> logout(String sessionId) {
+        LogoutCommand logoutCommand = new LogoutCommand(sessionId, userRepository);
+        UserCommandsInvoker<String> invoker = new UserCommandsInvoker<>(logoutCommand);
         return invoker.invoke();
     }
 

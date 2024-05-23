@@ -47,4 +47,9 @@ public class UserController {
         return this.userService.login(user);
     }
 
+    @PostMapping("/logout")
+    ResponseEntity<String> logout(@RequestHeader String Authorization){
+        return this.userService.logout(Authorization);
+    }
+
 }
