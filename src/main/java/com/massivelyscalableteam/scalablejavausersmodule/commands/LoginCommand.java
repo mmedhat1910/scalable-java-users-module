@@ -23,7 +23,9 @@ public class LoginCommand implements Command<String>{
         if (!passwordEncoder.matches(user.getPassword(), dbUser.getPassword())) {
             return ResponseEntity.status(401).body("Invalid password");
         }
-        // TODO: create JWT token
+        dbUser.setSession(java.util.UUID.randomUUID().toString());
+        this.userRepository.save(dbUser);
+        System.out.println("Logging in user: " + dbUser.getUsername());
         return ResponseEntity.ok(dbUser.getSession());
     }
 }

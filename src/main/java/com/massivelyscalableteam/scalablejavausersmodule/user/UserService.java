@@ -61,4 +61,9 @@ public class UserService {
         return invoker.invoke();
     }
 
+    public ResponseEntity<String> deleteUser(String authorization, String username) {
+        DeleteUserCommand deleteUserCommand = new DeleteUserCommand(authorization, username, userRepository);
+        UserCommandsInvoker<String> invoker = new UserCommandsInvoker<>(deleteUserCommand);
+        return invoker.invoke();
+    }
 }

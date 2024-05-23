@@ -55,10 +55,13 @@ public class UserController {
 
     @PutMapping("/{username}")
     ResponseEntity<User> updateUser(@RequestHeader String Authorization, @RequestBody UpdateUserDto user, @PathVariable String username){
-        System.out.println(Authorization);
-        System.out.println(user);
-        System.out.println(username);
         return this.userService.updateUser(Authorization, username, user);
     }
+
+    @DeleteMapping("/{username}")
+    ResponseEntity<String> deleteUser(@RequestHeader String Authorization, @PathVariable String username){
+        return this.userService.deleteUser(Authorization, username);
+    }
+
 
 }
