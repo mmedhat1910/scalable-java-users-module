@@ -84,7 +84,7 @@ public class UserService {
     }
 
 
-    protected User getUserByUsername(String username, String sessionId) {
+    public User getUserByUsername(String username, String sessionId) {
         RedisReadCommand<Map<String, String>> redisReadCommand = new RedisReadCommand<>(redis, username, (Class<Map<String, String>>) (Class<?>) Map.class);
         CommandInvoker<Map<String, String>> redisInvoker = new CommandInvoker<>(redisReadCommand);
         Map<String, String> response = redisInvoker.invoke();

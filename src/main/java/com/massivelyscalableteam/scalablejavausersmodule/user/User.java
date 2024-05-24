@@ -14,6 +14,7 @@ import java.util.Map;
 
 @Entity
 @Table(name = "users")
+@Data
 public class User {
     @Id
     @UuidGenerator(style = UuidGenerator.Style.RANDOM)
@@ -29,6 +30,10 @@ public class User {
     String session;
 
     public User() {}
+
+    public User(String username){
+        this.username = username;
+    }
 
     public User(String username, String password, String email, String full_name) {
         this.username = username;
