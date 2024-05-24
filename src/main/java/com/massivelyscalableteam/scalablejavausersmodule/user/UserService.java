@@ -7,6 +7,7 @@ import com.massivelyscalableteam.scalablejavausersmodule.commands.crud.DeleteUse
 import com.massivelyscalableteam.scalablejavausersmodule.commands.crud.GetUserCommand;
 import com.massivelyscalableteam.scalablejavausersmodule.commands.crud.GetUsersCommand;
 import com.massivelyscalableteam.scalablejavausersmodule.commands.crud.UpdateUserCommand;
+import com.massivelyscalableteam.scalablejavausersmodule.commands.redis.RedisDeleteCommand;
 import com.massivelyscalableteam.scalablejavausersmodule.commands.redis.RedisReadCommand;
 import com.massivelyscalableteam.scalablejavausersmodule.commands.redis.RedisSaveCommand;
 import com.massivelyscalableteam.scalablejavausersmodule.user.dto.AuthResponse;
@@ -72,14 +73,16 @@ public class UserService {
     protected Map<String, String> login(LoginDto user) {
         LoginCommand loginCommand = new LoginCommand(user, userRepository);
         CommandInvoker<AuthResponse> invoker = new CommandInvoker<>(loginCommand);
-        return invoker.invoke().response;
+
+        AuthResponse response = invoker.invoke();
+
+        RedisSaveCommand redisSaveCommand = new RedisSaveCommand<>(redis, response.user.username, response.user.toMap());
+        CommandInvoker redisInvoker = new CommandInvoker<>(redisSaveCommand);
+        redisInvoker.invoke();
+
+        return response.response;
     }
 
-    protected User getUserBySessionId(String sessionId) {
-        GetUserCommand getUserCommand = new GetUserCommand(userRepository, sessionId);
-        CommandInvoker<User> invoker = new CommandInvoker<>(getUserCommand);
-        return invoker.invoke();
-    }
 
     protected User getUserByUsername(String username, String sessionId) {
         RedisReadCommand<Map<String, String>> redisReadCommand = new RedisReadCommand<>(redis, username, (Class<Map<String, String>>) (Class<?>) Map.class);
@@ -117,12 +120,29 @@ public class UserService {
     protected User updateUser(String sessionId, String username, UpdateUserDto user) {
         UpdateUserCommand updateUserCommand = new UpdateUserCommand(sessionId, username, user, userRepository);
         CommandInvoker<User> invoker = new CommandInvoker<>(updateUserCommand);
-        return invoker.invoke();
+        User updated = invoker.invoke();
+
+        RedisSaveCommand redisSaveCommand = new RedisSaveCommand<>(redis, updated.username, updated.toMap());
+        CommandInvoker redisInvoker = new CommandInvoker<>(redisSaveCommand);
+        redisInvoker.invoke();
+
+        return updated;
     }
 
     public Map<String, String> deleteUser(String authorization, String username) {
         DeleteUserCommand deleteUserCommand = new DeleteUserCommand(authorization, username, userRepository);
         CommandInvoker<Map<String, String>> invoker = new CommandInvoker<>(deleteUserCommand);
+
+        RedisDeleteCommand<Map<String, String>> redisDeleteCommand = new RedisDeleteCommand<>(redis, username, (Class<Map<String, String>>) (Class<?>) Map.class, username);
+        CommandInvoker<Map<String, String>> redisInvoker = new CommandInvoker<>(redisDeleteCommand);
+
+        RedisDeleteCommand<List<Map<String, String>>> listRedisDeleteCommand = new RedisDeleteCommand<>(redisList, "users", (Class<List<Map<String, String>>>) (Class<?>) List.class, username);
+        CommandInvoker<List<Map<String, String>>> redisInvokerList = new CommandInvoker<>(listRedisDeleteCommand);
+
+
+        Map<String, String> response = redisInvoker.invoke();
+        List<Map<String, String>> responseList = redisInvokerList.invoke();
+
         return invoker.invoke();
     }
 }
