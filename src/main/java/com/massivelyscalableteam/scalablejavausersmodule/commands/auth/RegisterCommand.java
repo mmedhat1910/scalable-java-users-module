@@ -1,13 +1,18 @@
-package com.massivelyscalableteam.scalablejavausersmodule.commands;
+package com.massivelyscalableteam.scalablejavausersmodule.commands.auth;
 
+import com.massivelyscalableteam.scalablejavausersmodule.commands.Command;
 import com.massivelyscalableteam.scalablejavausersmodule.user.User;
 import com.massivelyscalableteam.scalablejavausersmodule.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
-public class RegisterCommand implements Command<String> {
+import java.util.Map;
+
+public class RegisterCommand extends Command<Map<String, String>> {
 
     private final User user;
     private final UserRepository userRepository;
@@ -18,16 +23,16 @@ public class RegisterCommand implements Command<String> {
     }
 
     @Override
-    public ResponseEntity<String> execute() {
+    public Map<String, String> execute() {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         System.out.println("Registering user: " + user);
         User existing = this.userRepository.findByUsername(user.getUsername());
         if (existing != null) {
-            return ResponseEntity.status(409).body("User already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User already exists");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         User created = this.userRepository.save(user);
         // TODO: create JWT token
-        return ResponseEntity.ok(created.getSession());
+        return Map.of("message", "User created successfully", "session", created.getSession());
     }
 }

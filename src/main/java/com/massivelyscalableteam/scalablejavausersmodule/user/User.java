@@ -3,7 +3,14 @@ package com.massivelyscalableteam.scalablejavausersmodule.user;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Data;
 import org.hibernate.annotations.UuidGenerator;
+import org.springframework.data.redis.core.RedisHash;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name = "users")
@@ -28,6 +35,37 @@ public class User {
         this.password = password;
         this.email = email;
         this.full_name = full_name;
+    }
+
+    public static List<User> mapToUserList(List<Map<String, String>> users) {
+        return users.stream().map(User::new).toList();
+    }
+
+    public static List<Map<String, String>> userListToMap(List<User> users) {
+        List<Map<String, String>> result = new ArrayList<>();
+        for (User user: users) {
+            result.add(user.toMap());
+        }
+        return result;
+    }
+
+    public Map<String, String> toMap() {
+        Map<String, String> map = new HashMap<>();
+        map.put("user_id", user_id);
+        map.put("username", username);
+        map.put("email", email);
+        map.put("full_name", full_name);
+        map.put("session", session);
+        return map;
+    }
+
+    public User(Map<String, String> map) {
+        this.user_id = map.get("user_id");
+        this.username = map.get("username");
+        this.password = map.get("password");
+        this.email = map.get("email");
+        this.full_name = map.get("full_name");
+        this.session = map.get("session");
     }
 
     public String getUser_id() {

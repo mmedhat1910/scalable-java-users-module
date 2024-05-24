@@ -1,10 +1,15 @@
-package com.massivelyscalableteam.scalablejavausersmodule.commands;
+package com.massivelyscalableteam.scalablejavausersmodule.commands.crud;
 
+import com.massivelyscalableteam.scalablejavausersmodule.commands.Command;
 import com.massivelyscalableteam.scalablejavausersmodule.user.User;
 import com.massivelyscalableteam.scalablejavausersmodule.user.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 
-public class DeleteUserCommand implements Command<String>{
+import java.util.Map;
+
+public class DeleteUserCommand extends Command<Map<String, String>> {
 
     private final String session;
     private final String username;
@@ -16,15 +21,13 @@ public class DeleteUserCommand implements Command<String>{
     }
 
     @Override
-    public ResponseEntity<String> execute() {
+    public Map<String, String> execute() {
         User user = this.userRepository.findByUsername(username);
-        if (user == null) {
-            return ResponseEntity.status(404).body(null);
-        }
+        if (user == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         if (!user.getSession().equals(session)) {
-            return ResponseEntity.status(401).body(null);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
         this.userRepository.deleteById(user.getUser_id());
-        return ResponseEntity.ok("User deleted");
+        return Map.of("message", "User deleted successfully");
     }
 }
