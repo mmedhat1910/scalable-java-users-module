@@ -44,7 +44,9 @@ public class GetUserCommand extends Command<User> {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
             }
             user.setPassword(null);
-            user.setSession(null);
+            if(sessionId == null || !sessionId.equals(user.getSession())){
+                user.setSession(null);
+            }
             return user;
         }else if (sessionId != null){
             User user = this.userRepository.findBySession(sessionId);

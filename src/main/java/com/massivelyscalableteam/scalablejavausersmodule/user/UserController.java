@@ -30,18 +30,18 @@ public class UserController {
     }
 
 
-    @GetMapping("/me")
-    @ResponseStatus(HttpStatus.OK)
-    User getUser(@RequestHeader String Authorization) {
-        System.out.println(Authorization);
-        return this.userService.getUserBySessionId(Authorization);
-    }
+//    @GetMapping("/me")
+//    @ResponseStatus(HttpStatus.OK)
+//    User getUser(@RequestHeader String Authorization) {
+//        System.out.println(Authorization);
+//        return this.userService.getUserBySessionId(Authorization);
+//    }
 
     @GetMapping("/username/{username}")
     @ResponseStatus(HttpStatus.OK)
-    public User getUserByUsername(@PathVariable String username) {
+    public User getUserByUsername(@PathVariable String username, @RequestHeader String Authorization) {
         System.out.println("Username: "+username);
-        return this.userService.getUserByUsername(username);
+        return this.userService.getUserByUsername(username, Authorization);
     }
 
     @PostMapping("/register")

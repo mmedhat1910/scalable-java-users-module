@@ -81,10 +81,31 @@ public class UserService {
         return invoker.invoke();
     }
 
-    protected User getUserByUsername(String username) {
-        GetUserCommand getUserCommand = new GetUserCommand(userRepository, null, username);
+    protected User getUserByUsername(String username, String sessionId) {
+        RedisReadCommand<Map<String, String>> redisReadCommand = new RedisReadCommand<>(redis, username, (Class<Map<String, String>>) (Class<?>) Map.class);
+        CommandInvoker<Map<String, String>> redisInvoker = new CommandInvoker<>(redisReadCommand);
+        Map<String, String> response = redisInvoker.invoke();
+        if (response!=null && !response.isEmpty()) {
+            System.out.println("Cache hit");
+            User cached = new User(response);
+            if (cached.session == null || !cached.session.equals(sessionId)) {
+                cached.setSession(null);
+            }
+            return cached;
+        }
+        System.out.println("Cache miss");
+
+        GetUserCommand getUserCommand = new GetUserCommand(userRepository, sessionId, username);
         CommandInvoker<User> invoker = new CommandInvoker<>(getUserCommand);
-        return invoker.invoke();
+        User dbResponse = invoker.invoke();
+
+        if (dbResponse!=null) {
+            Map<String, String> userMap = dbResponse.toMap();
+            RedisSaveCommand<Map<String, String>> redisSaveCommand = new RedisSaveCommand<>(redis, username, userMap);
+            redisInvoker = new CommandInvoker<>(redisSaveCommand);
+            redisInvoker.invoke();
+        }
+        return dbResponse;
     }
 
     protected Map<String, String> logout(String sessionId) {
