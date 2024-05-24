@@ -24,7 +24,15 @@ public class RedisSaveCommand<T> extends Command<T> {
 
     @Override
     public T execute() {
-        template.opsForValue().set(STRING_KEY_PREFIX + key, value);
-        return value;
+        if(value instanceof List){
+            template.opsForList().leftPushAll(STRING_KEY_PREFIX + key, (List) value);
+            return value;
+        }else if(value instanceof Map){
+            template.opsForHash().putAll(STRING_KEY_PREFIX + key, (Map) value);
+            return value;
+        }else {
+            template.opsForValue().set(STRING_KEY_PREFIX + key, value);
+            return value;
+        }
     }
 }

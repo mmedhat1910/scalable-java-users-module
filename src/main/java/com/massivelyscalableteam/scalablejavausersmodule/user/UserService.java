@@ -9,6 +9,7 @@ import com.massivelyscalableteam.scalablejavausersmodule.commands.crud.GetUsersC
 import com.massivelyscalableteam.scalablejavausersmodule.commands.crud.UpdateUserCommand;
 import com.massivelyscalableteam.scalablejavausersmodule.commands.redis.RedisReadCommand;
 import com.massivelyscalableteam.scalablejavausersmodule.commands.redis.RedisSaveCommand;
+import com.massivelyscalableteam.scalablejavausersmodule.user.dto.AuthResponse;
 import com.massivelyscalableteam.scalablejavausersmodule.user.dto.LoginDto;
 import com.massivelyscalableteam.scalablejavausersmodule.user.dto.UpdateUserDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,10 +38,10 @@ public class UserService {
     }
 
     protected List<User> getUsers() {
-        RedisReadCommand<List<Map<String, String>>> redisReadCommand = new RedisReadCommand<>(redisList, "users");
+        RedisReadCommand<List<Map<String, String>>> redisReadCommand = new RedisReadCommand<>(redisList, "users", (Class<List<Map<String, String>>>) (Class<?>) List.class);
         CommandInvoker<List<Map<String, String>>> redisInvoker = new CommandInvoker<>(redisReadCommand);
         List<Map<String, String>> response = redisInvoker.invoke();
-        if (response!=null) {
+        if (response!=null && !response.isEmpty()) {
             System.out.println("Cache hit");
             return User.mapToUserList(response);
         }
@@ -59,15 +60,19 @@ public class UserService {
 
     protected Map<String, String> register(User user) {
         RegisterCommand registerCommand = new RegisterCommand(user, userRepository);
-        CommandInvoker<Map<String, String>> invoker = new CommandInvoker<>(registerCommand);
-        return invoker.invoke();
+        CommandInvoker<AuthResponse> invoker = new CommandInvoker<>(registerCommand);
+        AuthResponse response = invoker.invoke();
+        response.user.setSession(null);
+        RedisSaveCommand redisSaveCommand = new RedisSaveCommand<>(redisList, "users", List.of(response.user.toMap()));
+        CommandInvoker redisInvoker = new CommandInvoker<>(redisSaveCommand);
+        redisInvoker.invoke();
+        return response.response;
     }
 
     protected Map<String, String> login(LoginDto user) {
         LoginCommand loginCommand = new LoginCommand(user, userRepository);
-        CommandInvoker<Map<String, String>> invoker = new CommandInvoker<>(loginCommand);
-        return invoker.invoke();
-
+        CommandInvoker<AuthResponse> invoker = new CommandInvoker<>(loginCommand);
+        return invoker.invoke().response;
     }
 
     protected User getUserBySessionId(String sessionId) {
