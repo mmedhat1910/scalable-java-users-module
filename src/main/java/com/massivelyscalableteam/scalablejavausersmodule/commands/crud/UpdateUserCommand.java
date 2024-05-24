@@ -1,14 +1,17 @@
-package com.massivelyscalableteam.scalablejavausersmodule.commands;
+package com.massivelyscalableteam.scalablejavausersmodule.commands.crud;
 
+import com.massivelyscalableteam.scalablejavausersmodule.commands.Command;
 import com.massivelyscalableteam.scalablejavausersmodule.user.User;
 import com.massivelyscalableteam.scalablejavausersmodule.user.UserRepository;
 import com.massivelyscalableteam.scalablejavausersmodule.user.dto.UpdateUserDto;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
-public class UpdateUserCommand implements Command<User>{
+public class UpdateUserCommand extends Command<User> {
 
     private final UpdateUserDto user;
     private final String sessionId;
@@ -22,15 +25,15 @@ public class UpdateUserCommand implements Command<User>{
         this.username = username;
     }
     @Override
-    public ResponseEntity<User> execute() {
+    public User execute() {
         User dbUser = this.userRepository.findByUsername(username);
         System.out.println(dbUser);
         System.out.println(user);
         if (dbUser == null) {
-            return ResponseEntity.status(404).body(null);
+           throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
         if (!dbUser.getSession().equals(sessionId)) {
-            return ResponseEntity.status(401).body(null);
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
         //check all fields, if not null, update, if null, keep the same
         if(user.getFull_name()!=null){
@@ -41,7 +44,7 @@ public class UpdateUserCommand implements Command<User>{
             System.out.println("Updating email to: "+user.getEmail());
             List<User> users = this.userRepository.findByEmail(user.getEmail());
             if(!users.isEmpty()){
-                return ResponseEntity.status(409).body(null);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already in use");
             }
             dbUser.setEmail(user.getEmail());
         }
@@ -54,6 +57,6 @@ public class UpdateUserCommand implements Command<User>{
 
         updated.setPassword(null);
 
-        return ResponseEntity.ok(updated);
+        return updated;
     }
 }
