@@ -10,10 +10,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class LoginCommand extends Command<AuthResponse> {
     private final LoginDto user;
     private final UserRepository userRepository;
+
+    private Logger logger = Logger.getLogger(LoginCommand.class.getName());
     public LoginCommand(LoginDto user, UserRepository userRepository) {
         this.userRepository = userRepository;
         this.user = user;
@@ -31,7 +34,7 @@ public class LoginCommand extends Command<AuthResponse> {
         }
         dbUser.setSession(java.util.UUID.randomUUID().toString());
         this.userRepository.save(dbUser);
-        System.out.println("Logging in user: " + dbUser.getUsername());
+        logger.info("Logging in user: " + dbUser.getUsername() + " with session: " + dbUser.getSession());
         return new AuthResponse(Map.of("session" ,dbUser.getSession()), dbUser);
     }
 }

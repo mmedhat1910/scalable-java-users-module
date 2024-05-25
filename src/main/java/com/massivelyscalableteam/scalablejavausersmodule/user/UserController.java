@@ -10,12 +10,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("users")
 public class UserController {
 
     private final UserService userService;
+
+    private Logger logger = Logger.getLogger(UserController.class.getName());
 
 
     @Autowired
@@ -26,33 +29,28 @@ public class UserController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<User> getUsers() {
+        logger.info("Getting users");
         return this.userService.getUsers();
     }
-
-
-//    @GetMapping("/me")
-//    @ResponseStatus(HttpStatus.OK)
-//    User getUser(@RequestHeader String Authorization) {
-//        System.out.println(Authorization);
-//        return this.userService.getUserBySessionId(Authorization);
-//    }
 
     @GetMapping("/username/{username}")
     @ResponseStatus(HttpStatus.OK)
     public User getUserByUsername(@PathVariable String username, @RequestHeader String Authorization) {
-        System.out.println("Username: "+username);
+        logger.info("Getting user by username: "+username);
         return this.userService.getUserByUsername(username, Authorization);
     }
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     Map<String, String> register(@RequestBody User user){
+        logger.info("Registering user: "+user.getUsername());
         return this.userService.register(user);
     }
 
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
     Map<String, String> login(@RequestBody LoginDto user){
+        logger.info("Logging in user: "+user.getUsername());
         return this.userService.login(user);
     }
 
@@ -65,12 +63,14 @@ public class UserController {
     @PutMapping("/{username}")
     @ResponseStatus(HttpStatus.ACCEPTED)
     User updateUser(@RequestHeader String Authorization, @RequestBody UpdateUserDto user, @PathVariable String username){
+        logger.info("Updating user: "+username);
         return this.userService.updateUser(Authorization, username, user);
     }
 
     @DeleteMapping("/{username}")
     @ResponseStatus(HttpStatus.OK)
     Map<String, String> deleteUser(@RequestHeader String Authorization, @PathVariable String username){
+        logger.info("Deleting user: "+username);
         return this.userService.deleteUser(Authorization, username);
     }
 

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 @Service
 public class RMQVerifyUser {
@@ -21,15 +22,18 @@ public class RMQVerifyUser {
     @Autowired
     private UserService userService;
 
+    private final Logger logger = Logger.getLogger(RMQVerifyUser.class.getName());
+
     @RabbitListener(queues = Constants.VERIFICATION_QUEUE)
     public User verifyUser(VerifyUserDto verifyUserDto) {
+        logger.info("Processing message on queue: " + Constants.VERIFICATION_QUEUE);
         if(verifyUserDto.sessionId == null || verifyUserDto.username == null) {
-            System.out.println("Invalid message received");
+            logger.info("Invalid request: " + verifyUserDto);
             return null;
         }
         //check is session id is valid formatting
         if (verifyUserDto.sessionId.length() != 36) {
-            System.out.println("Invalid session id: " + verifyUserDto.sessionId);
+            logger.info("Invalid session id: " + verifyUserDto.sessionId);
             rmq.convertAndSend(Constants.EXCHANGE,
                     Constants.VERIFICATION_RESPONSE_ROUTING_KEY,
                     "Invalid Session ID",
@@ -42,7 +46,7 @@ public class RMQVerifyUser {
 
         User user = userService.getUserByUsername(verifyUserDto.username, verifyUserDto.sessionId);
         if (user == null) {
-            System.out.println("User not found: " + verifyUserDto.username);
+            logger.info("User not found: " + verifyUserDto.username);
             rmq.convertAndSend(Constants.EXCHANGE,
                     Constants.VERIFICATION_RESPONSE_ROUTING_KEY,
                     "User Not Found",
@@ -53,7 +57,7 @@ public class RMQVerifyUser {
             return null;
         }
         if(user.getSession() == null || !user.getSession().equals(verifyUserDto.sessionId)) {
-            System.out.println("User not logged in: " + verifyUserDto.username);
+            logger.info("User not logged in: " + verifyUserDto.username);
             rmq.convertAndSend(Constants.EXCHANGE,
                     Constants.VERIFICATION_RESPONSE_ROUTING_KEY,
                     "User Not Logged In",
@@ -64,7 +68,7 @@ public class RMQVerifyUser {
             return null;
         }
 
-        System.out.println("Finished processing message");
+        logger.info("User verified: " + verifyUserDto.username);
         rmq.convertAndSend(Constants.EXCHANGE,
                 Constants.VERIFICATION_RESPONSE_ROUTING_KEY,
                 "Verified User",
@@ -73,14 +77,17 @@ public class RMQVerifyUser {
                         "status" , "200"
                 )));
 
+        logger.info("Finished processing message on queue: " + Constants.VERIFICATION_QUEUE);
+
         return user;
     }
 
     @RabbitListener(queues = Constants.USER_QUEUE)
     public void getUserByUsername(VerifyUserDto verifyUserDto) {
+        logger.info("Processing message on queue: " + Constants.USER_QUEUE);
         User user = this.verifyUser(verifyUserDto);
         if (user != null) {
-            System.out.println("User found: " + user.getUsername());
+            logger.info("User found: " + verifyUserDto.username);
             rmq.convertAndSend(Constants.USER_EXCHANGE,
                     Constants.USER_RESPONSE_ROUTING_KEY,
                     user,
@@ -89,7 +96,7 @@ public class RMQVerifyUser {
                             "status" , "200"
                     )));
         }else {
-            System.out.println("User not found: " + verifyUserDto.username);
+            logger.info("User not found: " + verifyUserDto.username);
             rmq.convertAndSend(Constants.USER_EXCHANGE,
                     Constants.USER_RESPONSE_ROUTING_KEY,
                     "User not found",
@@ -98,5 +105,7 @@ public class RMQVerifyUser {
                             "status" , "404"
                     )));
         }
+
+        logger.info("Finished processing message on queue: " + Constants.USER_QUEUE);
     }
 }

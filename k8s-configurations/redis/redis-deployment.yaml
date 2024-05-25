@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  selector:
+    matchLabels:
+      app: redis
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7.2.4
+          ports:
+            - containerPort: 6379
+        - name: redis-commander
+          image: mmedhat1910/redis-commander:latest
+          ports:
+            - containerPort: 8081
+

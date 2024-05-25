@@ -10,6 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 public class UpdateUserCommand extends Command<User> {
 
@@ -17,6 +18,8 @@ public class UpdateUserCommand extends Command<User> {
     private final String sessionId;
     private final String username;
     private final UserRepository userRepository;
+
+    private final Logger logger = Logger.getLogger(UpdateUserCommand.class.getName());
 
     public UpdateUserCommand(String sessionId,String username,  UpdateUserDto user, UserRepository userRepository) {
         this.user = user;
@@ -27,36 +30,37 @@ public class UpdateUserCommand extends Command<User> {
     @Override
     public User execute() {
         User dbUser = this.userRepository.findByUsername(username);
-        System.out.println(dbUser);
-        System.out.println(user);
         if (dbUser == null) {
+           logger.info("User not found");
            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
         if (!dbUser.getSession().equals(sessionId)) {
+            logger.info("Unauthorized");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
         //check all fields, if not null, update, if null, keep the same
         if(user.getFull_name()!=null){
-            System.out.println("Updating full name to: "+user.getFull_name());
+            logger.info("Updating full name to: "+user.getFull_name());
             dbUser.setFull_name(user.getFull_name());
         }
         if(user.getEmail()!=null){
-            System.out.println("Updating email to: "+user.getEmail());
+            logger.info("Updating email to: "+user.getEmail());
             List<User> users = this.userRepository.findByEmail(user.getEmail());
             if(!users.isEmpty()){
+                logger.info("Email already in use");
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already in use");
             }
             dbUser.setEmail(user.getEmail());
         }
         if(user.getPassword()!=null){
-            System.out.println("Updating password");
+            logger.info("Updating password");
             BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
             dbUser.setPassword(passwordEncoder.encode(user.getPassword()));
         }
         User updated = this.userRepository.save(dbUser);
 
         updated.setPassword(null);
-
+        logger.info("User updated successfully");
         return updated;
     }
 }

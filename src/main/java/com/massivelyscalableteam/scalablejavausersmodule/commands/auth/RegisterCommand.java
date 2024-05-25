@@ -26,14 +26,12 @@ public class RegisterCommand extends Command<AuthResponse> {
     @Override
     public AuthResponse execute() {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        System.out.println("Registering user: " + user);
         User existing = this.userRepository.findByUsername(user.getUsername());
         if (existing != null) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "User already exists");
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         User created = this.userRepository.save(user);
-        // TODO: create JWT token
         return new AuthResponse(Map.of("message", "User created successfully", "session", created.getSession()), created);
     }
 }

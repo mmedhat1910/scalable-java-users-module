@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 @Service
 public class UserService {
@@ -28,6 +29,8 @@ public class UserService {
     private UserRepository userRepository;
     private RedisTemplate<String, List<Map<String, String>>> redisList;
     private RedisTemplate<String, Map<String, String>> redis;
+
+    private Logger logger = Logger.getLogger(UserService.class.getName());
 
 
 
@@ -43,10 +46,10 @@ public class UserService {
         CommandInvoker<List<Map<String, String>>> redisInvoker = new CommandInvoker<>(redisReadCommand);
         List<Map<String, String>> response = redisInvoker.invoke();
         if (response!=null && !response.isEmpty()) {
-            System.out.println("Cache hit");
+            logger.info("Cache hit");
             return User.mapToUserList(response);
         }
-        System.out.println("Cache miss");
+        logger.info("Cache miss");
         GetUsersCommand getUsersCommand = new GetUsersCommand(userRepository);
         CommandInvoker<List<User>> invoker = new CommandInvoker<>(getUsersCommand);
         List<User> dbResponse =  invoker.invoke();
@@ -89,15 +92,14 @@ public class UserService {
         CommandInvoker<Map<String, String>> redisInvoker = new CommandInvoker<>(redisReadCommand);
         Map<String, String> response = redisInvoker.invoke();
         if (response!=null && !response.isEmpty()) {
-            System.out.println("Cache hit");
+            logger.info("Cache hit");
             User cached = new User(response);
             if (cached.session == null || !cached.session.equals(sessionId)) {
                 cached.setSession(null);
             }
             return cached;
         }
-        System.out.println("Cache miss");
-
+        logger.info("Cache miss");
         GetUserCommand getUserCommand = new GetUserCommand(userRepository, sessionId, username);
         CommandInvoker<User> invoker = new CommandInvoker<>(getUserCommand);
         User dbResponse = invoker.invoke();
@@ -112,6 +114,7 @@ public class UserService {
     }
 
     protected Map<String, String> logout(String sessionId) {
+        logger.info("Logging out user with session: "+sessionId);
         LogoutCommand logoutCommand = new LogoutCommand(sessionId, userRepository);
         CommandInvoker<Map<String, String>> invoker = new CommandInvoker<>(logoutCommand);
         return invoker.invoke();
